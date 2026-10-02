@@ -1,0 +1,121 @@
+============================================================
+PROYECTO: Enterprise Platform (docker-enterprise)
+Descripción: Aplicación web de 3 capas (web → app → base de datos)
+             orquestada con Docker Compose, desplegable en Render.
+============================================================
+
+1. TECNOLOGÍAS UTILIZADAS
+------------------------------------------------------------
+- Docker 29.8.2            -> Contenedores (aislamiento de servicios)
+- Docker Compose 5.5.1     -> Orquestación multi-contenedor
+- Nginx (imagen alpine)    -> Proxy inverso / capa web
+- Node.js 20 (alpine)      -> Runtime de la aplicación
+- Express ^4.18.2          -> Framework web HTTP
+- PostgreSQL 15 (alpine)   -> Base de datos relacional
+- pg ^8.11.3               -> Driver de Node.js para PostgreSQL
+
+2. ARQUITECTURA (3 capas)
+------------------------------------------------------------
+[Navegador] -> :80 [nginx] -> :3000 [app Node/Express] -> :5432 [PostgreSQL]
+
+- Capa web (web):      nginx escucha en el puerto 80 (único puerto
+                       expuesto al host) y reenvía con proxy_pass
+                       a http://app:3000.
+- Capa aplicación      Express en puerto 3000, NO expuesto al host.
+  (app):               Consulta PostgreSQL y devuelve HTML/JSON.
+- Capa de datos (db):  PostgreSQL 15, solo accesible desde la red
+                       interna.
+
+3. RED Y AISLAMIENTO
+------------------------------------------------------------
+- Red bridge personalizada: "red_empresa" (driver: bridge).
+- Los 3 servicios se conectan a ella y se resuelven entre sí por
+  nombre de servicio (DNS interno de Docker): "app", "db".
+- Solo "web" publica puerto (80:80). app y db no son alcanzables
+  desde fuera de Docker.
+
+4. BASE DE DATOS
+------------------------------------------------------------
+- Motor: PostgreSQL 15-alpine.
+- Nombre: enterprise_db (DB_NAME).
+- Usuario: enterprise (DB_USER).
+- Contraseña: definida en .env (NO en el código; ver .env.example).
+- La app ejecuta "SELECT NOW()" como prueba de conectividad y para
+  alimentar la sección Status de la página.
+- Esquema usado: el por defecto de PostgreSQL (public).
+- Persistencia: volumen nombrado "db_data" montado en
+  /var/lib/postgresql/data -> los datos sobreviven a
+  "docker compose down" (se borran solo con "down -v").
+
+5. VARIABLES DE ENTORNO
+------------------------------------------------------------
+Definidas en docker-compose.yml y tomadas del archivo .env
+(excluido del repo con .gitignore):
+
+  DB_USER=enterprise
+  DB_PASSWORD=<fuerte, solo en .env / Render>
+  DB_NAME=enterprise_db
+  (internamente: DB_HOST=db, DB_PORT=5432)
+
+En Render, estas mismas variables se inyectan automáticamente desde
+la base de datos manejada (render.yaml, fromDatabase) y se añade
+DB_SSL=true porque Render exige TLS.
+
+6. ESTRUCTURA DEL PROYECTO
+------------------------------------------------------------
+docker-enterprise/
+├── docker-compose.yml     -> Orquestación local (red, volumen, env)
+├── render.yaml            -> Blueprint de Render (servicio web + BD)
+├── .env                   -> Credenciales locales (no se sube a git)
+├── .env.example           -> Plantilla de credenciales
+├── .gitignore             -> Excluye .env y node_modules/
+├── README.md              -> Documentación básica del repo
+├── info.txt               -> Este archivo
+├── nginx/
+│   └── default.conf       -> Proxy inverso local
+└── app/
+    ├── Dockerfile          -> Imagen node:20-alpine + nginx
+    ├── package.json        -> Dependencias (express, pg)
+    ├── server.js           -> API + GET /api/status (JSON en vivo)
+    ├── public/
+    │   └── index.html      -> Interfaz estilo documentación
+    ├── nginx-render.conf   -> Proxy usado dentro del contenedor
+    └── entrypoint.sh       -> Arranca node + nginx juntos
+
+7. FLUJO DE UNA PETICIÓN
+------------------------------------------------------------
+1. Cliente -> GET http://localhost/
+2. nginx recibe y hace proxy_pass a http://app:3000
+3. Express consulta PostgreSQL (credenciales por variables de entorno)
+4. Ejecuta SELECT NOW() contra PostgreSQL (host "db")
+5. Devuelve la página con la hora de la BD (se actualiza cada 5 s
+   vía GET /api/status)
+6. Respuesta -> nginx -> cliente
+
+8. DECISIONES DE DISEÑO
+------------------------------------------------------------
+- Imágenes alpine en las 3 capas -> menor tamaño.
+- Dockerfile con COPY de package.json antes del código ->
+  capa de caché de "npm install" (rebuilds más rápidos).
+- Credenciales nunca en el código: .env local + variables de Render.
+- Servicios sin container_name para permitir escalar con Compose.
+- En Render (1 puerto por servicio): nginx y node comparten
+  contenedor; nginx escucha en $PORT y node en 127.0.0.1:3000.
+- DB_SSL=true solo en Render; en local la BD está en red interna.
+
+9. LIMITACIONES CONOCIDAS
+------------------------------------------------------------
+- depends_on solo espera el arranque, no que Postgres esté listo
+  (la app reintenta por request; solución: healthcheck).
+- Plan gratis de Render: la web se duerme tras inactividad
+  (primer arranque ~30 s) y la BD gratuita expira por inactividad.
+- Credenciales locales: cambiar en .env para cualquier entorno real.
+
+10. COMANDOS ÚTILES
+------------------------------------------------------------
+Levantar:      docker compose up -d --build
+Ver logs:      docker compose logs -f app
+Probar:        curl http://localhost/
+Status JSON:   curl http://localhost/api/status
+Parar:         docker compose down
+Parar+borrar:  docker compose down -v
