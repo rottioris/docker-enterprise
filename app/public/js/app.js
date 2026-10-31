@@ -36,5 +36,54 @@ async function refresh() {
   }
 }
 
+const btn = document.getElementById('btn');
+const meta = document.getElementById('meta');
+const out = document.getElementById('out');
+
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => (
+  { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+));
+const fecha = (d) => new Date(d).toLocaleDateString('es', { day: '2-digit', month: '2-digit' });
+
+function rows(data) {
+  return data.map((c) => `
+    <div class="row">
+      <span class="rid">#${c.id}</span>
+      <span class="rname">${esc(c.nombre)}</span>
+      <span class="rmail">${esc(c.email)}</span>
+      <span class="rdate">${fecha(c.creado_en)}</span>
+    </div>`).join('');
+}
+
+async function consult() {
+  btn.disabled = true;
+  btn.textContent = 'Consultando…';
+  meta.textContent = 'buscando…';
+  links.forEach((l) => l.classList.add('active'));
+
+  const start = performance.now();
+  try {
+    const res = await fetch('/api/clientes');
+    const s = await res.json();
+    const ms = Math.round(performance.now() - start);
+    if (!res.ok) throw new Error(s.error || 'error');
+
+    const rest = 450 - (performance.now() - start);
+    if (rest > 0) await new Promise((r) => setTimeout(r, rest));
+
+    meta.textContent = `${s.count} registros · ${ms} ms`;
+    out.innerHTML = rows(s.data);
+  } catch (e) {
+    meta.textContent = 'sin datos';
+    out.innerHTML = `<div class="row"><span class="rmail">No se pudo consultar: ${esc(e.message)}</span></div>`;
+  }
+  out.classList.add('show');
+  btn.disabled = false;
+  btn.textContent = 'Consultar';
+  refresh();
+}
+
+btn.addEventListener('click', consult);
+
 refresh();
 setInterval(refresh, 5000);
