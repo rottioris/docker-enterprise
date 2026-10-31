@@ -10,32 +10,39 @@ const el = {
   uptime: document.getElementById('uptime'),
 };
 const set = (node, cls) => { node.className = 'node ' + cls; };
+const setWire = (link, state) => {
+  link.classList.toggle('active', state === 'ok');
+  link.classList.toggle('err', state === 'err');
+};
+let health = { app: false, db: false };
 let traveling = false;
 
 async function refresh() {
   if (traveling) return;
+
+  let s = null;
   try {
     const res = await fetch('/api/status');
-    const s = await res.json();
-    const ok = s.db === 'connected';
-
-    set(nodes.web, 'ok');
-    set(nodes.app, ok ? 'ok' : 'err');
-    set(nodes.db, ok ? 'ok' : 'err');
-    links.forEach(l => l.classList.toggle('active', ok));
-
-    el.count.textContent = ok ? '3/3' : '1/3';
-    el.lat.textContent = ok ? s.latencyMs : '—';
-    const u = s.uptimeSec || 0;
-    el.uptime.textContent = u < 60 ? u + 's' : Math.floor(u / 60) + 'm';
+    s = await res.json();
   } catch (e) {
-    set(nodes.web, 'ok');
-    set(nodes.app, 'err');
-    set(nodes.db, 'err');
-    links.forEach(l => l.classList.remove('active'));
-    el.count.textContent = '1/3';
-    el.lat.textContent = '—';
+    s = null;
   }
+
+  const app = s !== null;                 // la app respondió por HTTP
+  const db = app && s.db === 'connected'; // la app alcanzó postgres
+  health = { app, db };
+
+  set(nodes.web, 'ok');
+  set(nodes.app, app ? 'ok' : 'err');
+  set(nodes.db, db ? 'ok' : 'err');
+
+  setWire(links[0], app ? 'ok' : 'err');
+  setWire(links[1], db ? 'ok' : 'err');
+
+  el.count.textContent = `${1 + (app ? 1 : 0) + (db ? 1 : 0)}/3`;
+  el.lat.textContent = app ? s.latencyMs : '—';
+  const u = (app && s.uptimeSec) || 0;
+  el.uptime.textContent = u < 60 ? u + 's' : Math.floor(u / 60) + 'm';
 }
 
 const btn = document.getElementById('btn');
@@ -67,7 +74,7 @@ async function consult() {
   btn.textContent = 'Consultando…';
   meta.textContent = 'consultando…';
   out.classList.remove('show');
-  links.forEach((l) => l.classList.remove('active'));
+  links.forEach((l) => { l.classList.remove('active', 'err'); });
 
   const start = performance.now();
   const pending = fetch('/api/clientes')
@@ -76,17 +83,17 @@ async function consult() {
 
   try {
     /* navegador → nginx */
-    links[0].classList.add('active');
+    setWire(links[0], health.app ? 'ok' : 'err');
     nodes.web.classList.add('trip');
     await sleep(420);
 
     /* nginx → node */
-    links[1].classList.add('active');
-    nodes.app.classList.add('trip');
+    setWire(links[1], health.db ? 'ok' : 'err');
+    if (health.app) nodes.app.classList.add('trip');
     await sleep(420);
 
     /* node → postgres */
-    nodes.db.classList.add('trip');
+    if (health.db) nodes.db.classList.add('trip');
 
     const { res, body: s, ms, error } = await pending;
     if (error) throw error;
@@ -113,6 +120,38 @@ async function consult() {
     refresh();
   }
 }
+
+const form = document.getElementById('form');
+const nom = document.getElementById('nom');
+const mail = document.getElementById('mail');
+const add = document.getElementById('add');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (traveling) return;
+
+  add.disabled = true;
+  add.textContent = 'Agregando…';
+  try {
+    const res = await fetch('/api/clientes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre: nom.value.trim(), email: mail.value.trim() }),
+    });
+    const s = await res.json();
+    if (!res.ok) throw new Error(s.error || 'error');
+
+    form.reset();
+    await consult();
+  } catch (err) {
+    meta.textContent = 'no se pudo agregar';
+    out.innerHTML = `<div class="row"><span class="rmail">No se pudo agregar: ${esc(err.message)}</span></div>`;
+    out.classList.add('show');
+  } finally {
+    add.disabled = false;
+    add.textContent = 'Agregar';
+  }
+});
 
 btn.addEventListener('click', consult);
 
