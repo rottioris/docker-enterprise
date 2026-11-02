@@ -35,6 +35,17 @@ app.get('/api/status', async (req, res) => {
   }
 });
 
+app.get('/api/clientes', async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, nombre, email, creado_en FROM clientes ORDER BY id LIMIT 50'
+    );
+    res.json({ count: rows.length, data: rows });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.listen(port, '0.0.0.0', () => {
