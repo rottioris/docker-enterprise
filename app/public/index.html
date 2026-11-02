@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Enterprise Platform · docker-enterprise</title>
+<title>Plataforma Empresarial · docker-enterprise</title>
 <style>
   :root {
     --bg: #0e1013;
@@ -139,10 +139,11 @@
   <div class="bar">
     <a class="brand" href="/"><span>docker</span>-enterprise</a>
     <nav>
-      <a href="#overview">Overview</a>
-      <a href="#architecture">Architecture</a>
-      <a href="#status">Status</a>
+      <a href="#overview">Resumen</a>
+      <a href="#architecture">Arquitectura</a>
+      <a href="#status">Estado</a>
       <a href="#stack">Stack</a>
+      <a href="https://github.com/rottioris/docker-enterprise" target="_blank" rel="noopener">GitHub ↗</a>
     </nav>
   </div>
 </header>
@@ -150,79 +151,79 @@
 <main>
 
   <section id="overview">
-    <p class="eyebrow"><b>概要</b> — Overview</p>
-    <h1>Enterprise Platform</h1>
+    <p class="eyebrow"><b>01</b> — Resumen</p>
+    <h1>Plataforma Empresarial</h1>
     <p class="lead">
-      A three-tier web application deployed with Docker Compose: an Nginx
-      reverse proxy, a Node.js API, and a PostgreSQL database, isolated on a
-      private bridge network with persistent storage.
+      Aplicación web de tres capas desplegada con Docker Compose: proxy
+      inverso Nginx, API en Node.js/Express y base de datos PostgreSQL,
+      aisladas en una red bridge privada con almacenamiento persistente.
     </p>
     <table>
-      <tr><th>Repository</th><td class="mono">rottioris/docker-enterprise</td></tr>
-      <tr><th>Runtime</th><td class="mono">node:20-alpine · nginx:alpine · postgres:15-alpine</td></tr>
-      <tr><th>Network</th><td class="mono">red_empresa (bridge) — only port 80 exposed</td></tr>
-      <tr><th>Persistence</th><td class="mono">db_data (named volume)</td></tr>
+      <tr><th>Repositorio</th><td class="mono"><a href="https://github.com/rottioris/docker-enterprise" target="_blank" rel="noopener" style="color: var(--accent);">github.com/rottioris/docker-enterprise</a></td></tr>
+      <tr><th>Entorno</th><td class="mono">node:20-alpine · nginx:alpine · postgres:15-alpine</td></tr>
+      <tr><th>Red</th><td class="mono">red_empresa (bridge) — solo se expone el puerto 80</td></tr>
+      <tr><th>Persistencia</th><td class="mono">db_data (volumen con nombre)</td></tr>
     </table>
   </section>
 
   <section id="architecture">
-    <p class="eyebrow"><b>構成</b> — Architecture</p>
-    <h2>Request flow</h2>
+    <p class="eyebrow"><b>02</b> — Arquitectura</p>
+    <h2>Flujo de una petición</h2>
 <pre>
-  browser
+  navegador
     │  http://host/
     ▼
-┌─────────┐  proxy   ┌──────────┐  query  ┌─────────────┐
-│  nginx  │ ───────▶ │   app    │ ──────▶ │ postgresql  │
-│  :80    │  :3000   │  node.js │  :5432  │  15-alpine  │
-└─────────┘          └──────────┘         └──────┬──────┘
-   web                    app                    │
-                                                 ▼
-                                          db_data (volume)
+┌─────────┐  proxy   ┌──────────┐ consulta ┌─────────────┐
+│  nginx  │ ───────▶ │   app    │ ───────▶ │ postgresql  │
+│  :80    │  :3000   │  node.js │  :5432   │  15-alpine  │
+└─────────┘          └──────────┘          └──────┬──────┘
+   web                    app                     │
+                                                  ▼
+                                          db_data (volumen)
 </pre>
     <table>
-      <tr><th>Service</th><th>Image</th><th>Port</th><th>Role</th></tr>
-      <tr><td class="mono">web</td><td class="mono">nginx:alpine</td><td class="mono">80 → 80</td><td>Reverse proxy, public entry point</td></tr>
-      <tr><td class="mono">app</td><td class="mono">built from app/</td><td class="mono">internal 3000</td><td>Express API, queries the database</td></tr>
-      <tr><td class="mono">db</td><td class="mono">postgres:15-alpine</td><td class="mono">internal 5432</td><td>Relational storage, named volume</td></tr>
+      <tr><th>Servicio</th><th>Imagen</th><th>Puerto</th><th>Función</th></tr>
+      <tr><td class="mono">web</td><td class="mono">nginx:alpine</td><td class="mono">80 → 80</td><td>Proxy inverso, punto de entrada público</td></tr>
+      <tr><td class="mono">app</td><td class="mono">compilada desde app/</td><td class="mono">interno 3000</td><td>API Express, consulta la base de datos</td></tr>
+      <tr><td class="mono">db</td><td class="mono">postgres:15-alpine</td><td class="mono">interno 5432</td><td>Almacenamiento relacional, volumen con nombre</td></tr>
     </table>
   </section>
 
   <section id="status">
-    <p class="eyebrow"><b>状態</b> — Status</p>
-    <h2>Live health check</h2>
-    <p class="lead">Read from <code>GET /api/status</code>, refreshed every 5 seconds.</p>
+    <p class="eyebrow"><b>03</b> — Estado</p>
+    <h2>Comprobación en vivo</h2>
+    <p class="lead">Leído desde <code>GET /api/status</code>, actualizado cada 5 segundos.</p>
     <table class="mono">
-      <tr><th>Field</th><th>Value</th></tr>
-      <tr><td>Database</td><td id="st-db">connecting…</td></tr>
-      <tr><td>Server time (DB)</td><td id="st-time">{{DB_TIME}}</td></tr>
-      <tr><td>Query latency</td><td id="st-lat">—</td></tr>
-      <tr><td>App uptime</td><td id="st-up">—</td></tr>
-      <tr><td>Runtime</th><td id="st-node">—</td></tr>
+      <tr><th>Campo</th><th>Valor</th></tr>
+      <tr><td>Base de datos</td><td id="st-db">conectando…</td></tr>
+      <tr><td>Hora del servidor (BD)</td><td id="st-time">{{DB_TIME}}</td></tr>
+      <tr><td>Latencia de consulta</td><td id="st-lat">—</td></tr>
+      <tr><td>Tiempo activo de la app</td><td id="st-up">—</td></tr>
+      <tr><td>Entorno</td><td id="st-node">—</td></tr>
     </table>
   </section>
 
   <section id="how">
-    <p class="eyebrow"><b>手順</b> — How it works</p>
-    <h2>Request lifecycle</h2>
+    <p class="eyebrow"><b>04</b> — Cómo funciona</p>
+    <h2>Ciclo de vida de la petición</h2>
     <ol>
-      <li><b>Client → Nginx.</b> <span>The browser hits port 80; Nginx is the only container publishing a host port.</span></li>
-      <li><b>Nginx → App.</b> <span><code>proxy_pass http://app:3000</code> resolves the service name over the bridge network.</span></li>
-      <li><b>App → PostgreSQL.</b> <span>Express runs <code>SELECT NOW()</code> using credentials injected as environment variables.</span></li>
-      <li><b>Response.</b> <span>The DB timestamp travels back through the same path and is rendered on this page.</span></li>
+      <li><b>Cliente → Nginx.</b> <span>El navegador entra por el puerto 80; Nginx es el único contenedor que publica un puerto en el host.</span></li>
+      <li><b>Nginx → App.</b> <span><code>proxy_pass http://app:3000</code> resuelve el nombre del servicio a través de la red bridge.</span></li>
+      <li><b>App → PostgreSQL.</b> <span>Express ejecuta <code>SELECT NOW()</code> con credenciales inyectadas como variables de entorno.</span></li>
+      <li><b>Respuesta.</b> <span>La hora de la base de datos regresa por el mismo camino y se muestra en esta página.</span></li>
     </ol>
   </section>
 
   <section id="stack">
-    <p class="eyebrow"><b>技術</b> — Stack</p>
-    <h2>Components</h2>
+    <p class="eyebrow"><b>05</b> — Stack</p>
+    <h2>Componentes</h2>
     <table>
-      <tr><th>Component</th><th>Version</th><th>Role</th></tr>
-      <tr><td>Docker / Docker Compose</td><td class="mono">29.x / 5.x</td><td>Container orchestration</td></tr>
-      <tr><td>Nginx</td><td class="mono">alpine</td><td>Reverse proxy (web tier)</td></tr>
-      <tr><td>Node.js + Express</td><td class="mono">20 / ^4.18</td><td>Application tier</td></tr>
-      <tr><td>PostgreSQL</td><td class="mono">15-alpine</td><td>Data tier</td></tr>
-      <tr><td>node-postgres (pg)</td><td class="mono">^8.11</td><td>Database driver</td></tr>
+      <tr><th>Componente</th><th>Versión</th><th>Función</th></tr>
+      <tr><td>Docker / Docker Compose</td><td class="mono">29.x / 5.x</td><td>Orquestación de contenedores</td></tr>
+      <tr><td>Nginx</td><td class="mono">alpine</td><td>Proxy inverso (capa web)</td></tr>
+      <tr><td>Node.js + Express</td><td class="mono">20 / ^4.18</td><td>Capa de aplicación</td></tr>
+      <tr><td>PostgreSQL</td><td class="mono">15-alpine</td><td>Capa de datos</td></tr>
+      <tr><td>node-postgres (pg)</td><td class="mono">^8.11</td><td>Driver de base de datos</td></tr>
     </table>
   </section>
 
@@ -230,8 +231,8 @@
 
 <footer>
   <div class="bar">
-    <span>docker-enterprise · built with Docker, Nginx, Node.js and PostgreSQL</span>
-    <span class="mono">概要/構成/状態/手順/技術</span>
+    <span>docker-enterprise · creado con Docker, Nginx, Node.js y PostgreSQL · <a href="https://github.com/rottioris/docker-enterprise" target="_blank" rel="noopener" style="color: var(--accent); text-decoration: none;">Repositorio en GitHub</a></span>
+    <span class="mono">tres capas · red bridge · volumen persistente</span>
   </div>
 </footer>
 
@@ -246,19 +247,19 @@
       var s = await r.json();
       var db = document.getElementById('st-db');
       if (s.db === 'connected') {
-        db.textContent = 'connected';
+        db.textContent = 'conectada';
         db.className = 'ok';
         document.getElementById('st-time').textContent = s.serverTime;
         document.getElementById('st-lat').textContent = s.latencyMs + ' ms';
         document.getElementById('st-node').textContent = 'node ' + s.node;
       } else {
-        db.textContent = 'disconnected';
+        db.textContent = 'desconectada';
         db.className = 'err';
       }
       document.getElementById('st-up').textContent = fmtUptime(s.uptimeSec);
     } catch (e) {
       var db = document.getElementById('st-db');
-      db.textContent = 'unreachable';
+      db.textContent = 'no accesible';
       db.className = 'err';
     }
   }
