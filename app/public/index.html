@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enterprise Platform · docker-enterprise</title>
+<style>
+  :root {
+    --bg: #0e1013;
+    --surface: #14171c;
+    --border: #22262e;
+    --text: #d7d9de;
+    --muted: #7d828c;
+    --accent: #e04a2f;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.7 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .bar {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: 0.9rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .brand {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    text-decoration: none;
+  }
+  .brand span { color: var(--accent); }
+  nav a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 0.82rem;
+    margin-left: 1.1rem;
+  }
+  nav a:hover { color: var(--accent); }
+  main {
+    max-width: 46rem;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 4rem;
+  }
+  section { margin-top: 3rem; }
+  .eyebrow {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+  .eyebrow b { color: var(--accent); font-weight: 500; }
+  h1 { font-size: 1.9rem; line-height: 1.25; font-weight: 650; }
+  h2 { font-size: 1.25rem; font-weight: 600; }
+  p.lead { color: var(--muted); margin-top: 0.8rem; }
+  p + p { margin-top: 0.8rem; }
+  pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.1rem;
+    overflow-x: auto;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.8rem;
+    line-height: 1.55;
+    color: var(--text);
+    margin-top: 1rem;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-size: 0.87rem;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--surface);
+    color: var(--muted);
+    font-weight: 500;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  td.mono, .mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.83rem;
+  }
+  ol { margin-top: 1rem; padding-left: 1.4rem; }
+  ol li { margin-bottom: 0.7rem; color: var(--text); }
+  ol li::marker { color: var(--accent); font-family: ui-monospace, monospace; }
+  ol li b { font-weight: 600; }
+  ol li span { color: var(--muted); }
+  .ok { color: #7bbf6a; }
+  .err { color: var(--accent); }
+  footer {
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.8rem;
+  }
+  footer .bar { padding: 1.2rem; }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.85em;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.05em 0.35em;
+  }
+  @media (max-width: 560px) {
+    nav a { margin-left: 0.7rem; font-size: 0.75rem; }
+    h1 { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <a class="brand" href="/"><span>docker</span>-enterprise</a>
+    <nav>
+      <a href="#overview">Overview</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#status">Status</a>
+      <a href="#stack">Stack</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <section id="overview">
+    <p class="eyebrow"><b>概要</b> — Overview</p>
+    <h1>Enterprise Platform</h1>
+    <p class="lead">
+      A three-tier web application deployed with Docker Compose: an Nginx
+      reverse proxy, a Node.js API, and a PostgreSQL database, isolated on a
+      private bridge network with persistent storage.
+    </p>
+    <table>
+      <tr><th>Repository</th><td class="mono">rottioris/docker-enterprise</td></tr>
+      <tr><th>Runtime</th><td class="mono">node:20-alpine · nginx:alpine · postgres:15-alpine</td></tr>
+      <tr><th>Network</th><td class="mono">red_empresa (bridge) — only port 80 exposed</td></tr>
+      <tr><th>Persistence</th><td class="mono">db_data (named volume)</td></tr>
+    </table>
+  </section>
+
+  <section id="architecture">
+    <p class="eyebrow"><b>構成</b> — Architecture</p>
+    <h2>Request flow</h2>
+<pre>
+  browser
+    │  http://host/
+    ▼
+┌─────────┐  proxy   ┌──────────┐  query  ┌─────────────┐
+│  nginx  │ ───────▶ │   app    │ ──────▶ │ postgresql  │
+│  :80    │  :3000   │  node.js │  :5432  │  15-alpine  │
+└─────────┘          └──────────┘         └──────┬──────┘
+   web                    app                    │
+                                                 ▼
+                                          db_data (volume)
+</pre>
+    <table>
+      <tr><th>Service</th><th>Image</th><th>Port</th><th>Role</th></tr>
+      <tr><td class="mono">web</td><td class="mono">nginx:alpine</td><td class="mono">80 → 80</td><td>Reverse proxy, public entry point</td></tr>
+      <tr><td class="mono">app</td><td class="mono">built from app/</td><td class="mono">internal 3000</td><td>Express API, queries the database</td></tr>
+      <tr><td class="mono">db</td><td class="mono">postgres:15-alpine</td><td class="mono">internal 5432</td><td>Relational storage, named volume</td></tr>
+    </table>
+  </section>
+
+  <section id="status">
+    <p class="eyebrow"><b>状態</b> — Status</p>
+    <h2>Live health check</h2>
+    <p class="lead">Read from <code>GET /api/status</code>, refreshed every 5 seconds.</p>
+    <table class="mono">
+      <tr><th>Field</th><th>Value</th></tr>
+      <tr><td>Database</td><td id="st-db">connecting…</td></tr>
+      <tr><td>Server time (DB)</td><td id="st-time">{{DB_TIME}}</td></tr>
+      <tr><td>Query latency</td><td id="st-lat">—</td></tr>
+      <tr><td>App uptime</td><td id="st-up">—</td></tr>
+      <tr><td>Runtime</th><td id="st-node">—</td></tr>
+    </table>
+  </section>
+
+  <section id="how">
+    <p class="eyebrow"><b>手順</b> — How it works</p>
+    <h2>Request lifecycle</h2>
+    <ol>
+      <li><b>Client → Nginx.</b> <span>The browser hits port 80; Nginx is the only container publishing a host port.</span></li>
+      <li><b>Nginx → App.</b> <span><code>proxy_pass http://app:3000</code> resolves the service name over the bridge network.</span></li>
+      <li><b>App → PostgreSQL.</b> <span>Express runs <code>SELECT NOW()</code> using credentials injected as environment variables.</span></li>
+      <li><b>Response.</b> <span>The DB timestamp travels back through the same path and is rendered on this page.</span></li>
+    </ol>
+  </section>
+
+  <section id="stack">
+    <p class="eyebrow"><b>技術</b> — Stack</p>
+    <h2>Components</h2>
+    <table>
+      <tr><th>Component</th><th>Version</th><th>Role</th></tr>
+      <tr><td>Docker / Docker Compose</td><td class="mono">29.x / 5.x</td><td>Container orchestration</td></tr>
+      <tr><td>Nginx</td><td class="mono">alpine</td><td>Reverse proxy (web tier)</td></tr>
+      <tr><td>Node.js + Express</td><td class="mono">20 / ^4.18</td><td>Application tier</td></tr>
+      <tr><td>PostgreSQL</td><td class="mono">15-alpine</td><td>Data tier</td></tr>
+      <tr><td>node-postgres (pg)</td><td class="mono">^8.11</td><td>Database driver</td></tr>
+    </table>
+  </section>
+
+</main>
+
+<footer>
+  <div class="bar">
+    <span>docker-enterprise · built with Docker, Nginx, Node.js and PostgreSQL</span>
+    <span class="mono">概要/構成/状態/手順/技術</span>
+  </div>
+</footer>
+
+<script>
+  function fmtUptime(s) {
+    var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    return (h ? h + "h " : "") + (m || h ? m + "m " : "") + sec + "s";
+  }
+  async function refresh() {
+    try {
+      var r = await fetch('/api/status');
+      var s = await r.json();
+      var db = document.getElementById('st-db');
+      if (s.db === 'connected') {
+        db.textContent = 'connected';
+        db.className = 'ok';
+        document.getElementById('st-time').textContent = s.serverTime;
+        document.getElementById('st-lat').textContent = s.latencyMs + ' ms';
+        document.getElementById('st-node').textContent = 'node ' + s.node;
+      } else {
+        db.textContent = 'disconnected';
+        db.className = 'err';
+      }
+      document.getElementById('st-up').textContent = fmtUptime(s.uptimeSec);
+    } catch (e) {
+      var db = document.getElementById('st-db');
+      db.textContent = 'unreachable';
+      db.className = 'err';
+    }
+  }
+  refresh();
+  setInterval(refresh, 5000);
+</script>
+
+</body>
+</html>
