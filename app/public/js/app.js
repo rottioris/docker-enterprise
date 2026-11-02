@@ -67,14 +67,28 @@ function rows(data) {
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const STEP = 380;   // ida: navegador → nginx → node → postgres
+const BACK = 300;   // vuelta: postgres → node → nginx → navegador
 const MIN_TRIP = 1500;
-const STEP = 380;
 
-const hop = (link, ok) => {
+const tripNode = (n) => {
+  [nodes.web, nodes.app, nodes.db].forEach((x) => x.classList.remove('trip'));
+  if (n) n.classList.add('trip');
+};
+
+const hop = (link, ok, back = false) => {
   link.classList.remove('hop');
-  void link.offsetWidth;               // reinicia la animación del paquete
+  link.classList.toggle('back', back);  // paquete en reversa
+  void link.offsetWidth;                // reinicia la animación del paquete
   setWire(link, ok ? 'ok' : 'err');
   if (ok) link.classList.add('hop');
+};
+
+const hostHop = (back = false) => {
+  hostlink.classList.remove('hop');
+  hostlink.classList.toggle('back', back);
+  void hostlink.offsetWidth;
+  hostlink.classList.add('hop');
 };
 
 async function consult() {
@@ -84,38 +98,62 @@ async function consult() {
   btn.textContent = 'Consultando…';
   meta.textContent = 'preparando…';
   out.classList.remove('show');
-  links.forEach((l) => { l.classList.remove('active', 'err', 'hop'); });
-  hostlink.classList.remove('hop');
+  links.forEach((l) => l.classList.remove('active', 'err', 'hop', 'back'));
+  hostlink.classList.remove('hop', 'back');
 
   const start = performance.now();
+  let settled = false;
   const pending = fetch('/api/clientes')
     .then(async (res) => ({ res, body: await res.json(), ms: Math.round(performance.now() - start) }))
-    .catch((error) => ({ error }));
+    .catch((error) => ({ error }))
+    .finally(() => { settled = true; });
 
   try {
-    /* navegador → nginx (el host publica el puerto 80) */
+    /* ida: navegador → nginx (el host publica el puerto 80) */
     host.classList.add('busy');
-    void hostlink.offsetWidth;
-    hostlink.classList.add('hop');
-    nodes.web.classList.add('trip');
+    hostHop();
+    tripNode(nodes.web);
     meta.textContent = 'navegador → nginx…';
     await sleep(STEP);
 
     /* nginx → node */
     hop(links[0], health.app);
-    if (health.app) nodes.app.classList.add('trip');
+    if (health.app) tripNode(nodes.app);
     meta.textContent = health.app ? 'nginx → node…' : 'nginx → node: sin conexión';
     await sleep(STEP);
 
     /* node → postgres */
     hop(links[1], health.db);
-    if (health.db) nodes.db.classList.add('trip');
+    if (health.db) tripNode(nodes.db);
     meta.textContent = health.db ? 'node → postgres…' : 'node → postgres: sin conexión';
     await sleep(STEP);
 
+    if (!settled) meta.textContent = 'esperando respuesta…';
     const { res, body: s, ms, error } = await pending;
-    if (error) throw error;
-    if (!res.ok) throw new Error(s.error || 'error');
+    const ok = !error && res.ok;
+
+    /* la respuesta vuelve desde el último servicio que llegó a responder */
+    const origin = ok ? 'db' : (health.app ? (health.db ? 'db' : 'app') : 'web');
+    if (ok) { setWire(links[0], 'ok'); setWire(links[1], 'ok'); }
+
+    if (origin === 'db') {
+      hop(links[1], true, true);
+      tripNode(nodes.app);
+      meta.textContent = 'postgres → node…';
+      await sleep(BACK);
+    }
+    if (origin === 'db' || origin === 'app') {
+      hop(links[0], true, true);
+      tripNode(nodes.web);
+      meta.textContent = 'node → nginx…';
+      await sleep(BACK);
+    }
+    hostHop(true);
+    tripNode(null);
+    meta.textContent = 'nginx → navegador…';
+    await sleep(BACK);
+
+    if (!ok) throw new Error(error ? error.message : (s && s.error) || 'error');
 
     const rest = MIN_TRIP - (performance.now() - start);
     if (rest > 0) await sleep(rest);
@@ -129,8 +167,8 @@ async function consult() {
     out.innerHTML = `<div class="row"><span class="rmail">No se pudo consultar: ${esc(e.message)}</span></div>`;
   } finally {
     host.classList.remove('busy');
-    hostlink.classList.remove('hop');
-    links.forEach((l) => l.classList.remove('hop'));
+    hostlink.classList.remove('hop', 'back');
+    links.forEach((l) => l.classList.remove('hop', 'back'));
     nodes.web.classList.remove('trip');
     nodes.app.classList.remove('trip');
     nodes.db.classList.remove('trip');
