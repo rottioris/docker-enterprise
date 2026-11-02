@@ -75,6 +75,27 @@ body {
 .link.active .wire::before { opacity:1; animation:flow 1.7s linear infinite; }
 .link small { position:absolute; top:calc(50% + .45rem); left:50%; transform:translateX(-50%); font:.53rem ui-monospace, monospace; color:var(--muted); white-space:nowrap; }
 
+/* consulta de datos */
+.act { display:flex; align-items:center; justify-content:space-between; gap:.75rem; margin-top:1rem; }
+.btn {
+  font:.68rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color:#cfe6fb; background:rgba(36,150,237,.1);
+  border:1px solid rgba(36,150,237,.35); border-radius:7px;
+  padding:.38rem .8rem; cursor:pointer;
+  transition:background .2s, border-color .2s;
+}
+.btn:hover { background:rgba(36,150,237,.18); }
+.btn:disabled { opacity:.55; cursor:default; }
+.meta { font:.6rem ui-monospace, monospace; color:var(--muted); }
+.out { display:none; margin-top:.7rem; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:.15rem .65rem; }
+.out.show { display:block; }
+.row { display:flex; align-items:center; gap:.55rem; padding:.45rem 0; border-bottom:1px solid rgba(37,42,51,.6); font:.64rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.row:last-child { border-bottom:0; }
+.rid { color:var(--accent); flex:0 0 auto; }
+.rname { color:var(--text); font-weight:600; max-width:7.5rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rmail { color:var(--muted); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rdate { color:var(--muted); font-size:.56rem; flex:0 0 auto; }
+
 .foot { display:flex; align-items:baseline; justify-content:space-between; gap:.75rem; border-top:1px solid var(--line); margin-top:1.05rem; padding-top:.7rem; font:.7rem ui-monospace, monospace; color:var(--muted); }
 .metric b { color:var(--text); font-size:1rem; font-weight:600; margin-right:.15rem; }
 .right { display:flex; gap:1rem; }
@@ -89,5 +110,6 @@ body {
   .wire::before { background:linear-gradient(180deg, transparent 0%, var(--accent) 45%, #7cc4ff 50%, var(--accent) 55%, transparent 100%); transform:translateY(-100%); }
   .link.active .wire::before { animation:flowv 1.7s linear infinite; }
   .link small { top:50%; left:calc(50% + .8rem); transform:translateY(-50%); }
+  .rdate { display:none; }
   @keyframes flowv { from { transform:translateY(-100%); } to { transform:translateY(100%); } }
 }
