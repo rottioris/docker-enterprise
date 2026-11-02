@@ -14,7 +14,7 @@
       <span class="pill"><b id="count">—</b> en línea</span>
     </header>
 
-    <div class="hostcard">
+    <div class="hostcard" id="host">
       <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
       <div class="hinfo">
         <span class="hname">navegador</span>
@@ -22,7 +22,11 @@
       </div>
       <span class="url">localhost:80</span>
     </div>
-    <div class="publish"><span>publica 80:80</span></div>
+
+    <div class="publish" id="hostlink">
+      <span class="pline"><i class="pkt"></i></span>
+      <span class="plabel">publica 80:80</span>
+    </div>
 
     <section class="net">
       <div class="diagram">
@@ -35,7 +39,7 @@
           <span class="ip">172.18.0.4</span>
         </div>
 
-        <div class="link" id="l-web"><span class="wire"></span><small>:3000</small></div>
+        <div class="link" id="l-web"><span class="wire"><i class="pkt"></i></span><small>:3000</small></div>
 
         <div class="node" id="n-app">
           <div class="top">
@@ -46,7 +50,7 @@
           <span class="ip">172.18.0.3</span>
         </div>
 
-        <div class="link" id="l-app"><span class="wire"></span><small>5432</small></div>
+        <div class="link" id="l-app"><span class="wire"><i class="pkt"></i></span><small>5432</small></div>
 
         <div class="node" id="n-db">
           <div class="top">
@@ -59,16 +63,18 @@
       </div>
     </section>
 
-    <div class="act">
-      <button class="btn" id="btn">Consultar</button>
-      <span class="meta" id="meta"></span>
-    </div>
+    <section class="panel">
+      <div class="act">
+        <button class="btn pri" id="btn">Consultar</button>
+        <span class="meta" id="meta"></span>
+      </div>
 
-    <form class="add" id="form" autocomplete="off">
-      <input class="inp" id="nom" name="nombre" placeholder="nombre" maxlength="60" required>
-      <input class="inp" id="mail" name="email" type="email" placeholder="email" maxlength="120" required>
-      <button class="btn" id="add" type="submit">Agregar</button>
-    </form>
+      <form class="add" id="form" autocomplete="off">
+        <input class="inp" id="nom" name="nombre" placeholder="nombre" maxlength="60" aria-label="nombre" required>
+        <input class="inp" id="mail" name="email" type="email" placeholder="email" maxlength="120" aria-label="email" required>
+        <button class="btn" id="add" type="submit">Agregar</button>
+      </form>
+    </section>
 
     <div class="out" id="out"></div>
 

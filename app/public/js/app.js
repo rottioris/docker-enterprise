@@ -48,6 +48,8 @@ async function refresh() {
 const btn = document.getElementById('btn');
 const meta = document.getElementById('meta');
 const out = document.getElementById('out');
+const host = document.getElementById('host');
+const hostlink = document.getElementById('hostlink');
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => (
   { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
@@ -65,16 +67,25 @@ function rows(data) {
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const MIN_TRIP = 1300;
+const MIN_TRIP = 1500;
+const STEP = 380;
+
+const hop = (link, ok) => {
+  link.classList.remove('hop');
+  void link.offsetWidth;               // reinicia la animación del paquete
+  setWire(link, ok ? 'ok' : 'err');
+  if (ok) link.classList.add('hop');
+};
 
 async function consult() {
   if (traveling) return;
   traveling = true;
   btn.disabled = true;
   btn.textContent = 'Consultando…';
-  meta.textContent = 'consultando…';
+  meta.textContent = 'preparando…';
   out.classList.remove('show');
-  links.forEach((l) => { l.classList.remove('active', 'err'); });
+  links.forEach((l) => { l.classList.remove('active', 'err', 'hop'); });
+  hostlink.classList.remove('hop');
 
   const start = performance.now();
   const pending = fetch('/api/clientes')
@@ -82,18 +93,25 @@ async function consult() {
     .catch((error) => ({ error }));
 
   try {
-    /* navegador → nginx */
-    setWire(links[0], health.app ? 'ok' : 'err');
+    /* navegador → nginx (el host publica el puerto 80) */
+    host.classList.add('busy');
+    void hostlink.offsetWidth;
+    hostlink.classList.add('hop');
     nodes.web.classList.add('trip');
-    await sleep(420);
+    meta.textContent = 'navegador → nginx…';
+    await sleep(STEP);
 
     /* nginx → node */
-    setWire(links[1], health.db ? 'ok' : 'err');
+    hop(links[0], health.app);
     if (health.app) nodes.app.classList.add('trip');
-    await sleep(420);
+    meta.textContent = health.app ? 'nginx → node…' : 'nginx → node: sin conexión';
+    await sleep(STEP);
 
     /* node → postgres */
+    hop(links[1], health.db);
     if (health.db) nodes.db.classList.add('trip');
+    meta.textContent = health.db ? 'node → postgres…' : 'node → postgres: sin conexión';
+    await sleep(STEP);
 
     const { res, body: s, ms, error } = await pending;
     if (error) throw error;
@@ -110,6 +128,9 @@ async function consult() {
     meta.textContent = 'sin datos';
     out.innerHTML = `<div class="row"><span class="rmail">No se pudo consultar: ${esc(e.message)}</span></div>`;
   } finally {
+    host.classList.remove('busy');
+    hostlink.classList.remove('hop');
+    links.forEach((l) => l.classList.remove('hop'));
     nodes.web.classList.remove('trip');
     nodes.app.classList.remove('trip');
     nodes.db.classList.remove('trip');
