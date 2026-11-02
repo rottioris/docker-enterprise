@@ -10,8 +10,10 @@ const el = {
   uptime: document.getElementById('uptime'),
 };
 const set = (node, cls) => { node.className = 'node ' + cls; };
+let traveling = false;
 
 async function refresh() {
+  if (traveling) return;
   try {
     const res = await fetch('/api/status');
     const s = await res.json();
@@ -55,32 +57,61 @@ function rows(data) {
     </div>`).join('');
 }
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const MIN_TRIP = 1300;
+
 async function consult() {
+  if (traveling) return;
+  traveling = true;
   btn.disabled = true;
   btn.textContent = 'Consultando…';
-  meta.textContent = 'buscando…';
-  links.forEach((l) => l.classList.add('active'));
+  meta.textContent = 'consultando…';
+  out.classList.remove('show');
+  links.forEach((l) => l.classList.remove('active'));
 
   const start = performance.now();
+  const pending = fetch('/api/clientes')
+    .then(async (res) => ({ res, body: await res.json(), ms: Math.round(performance.now() - start) }))
+    .catch((error) => ({ error }));
+
   try {
-    const res = await fetch('/api/clientes');
-    const s = await res.json();
-    const ms = Math.round(performance.now() - start);
+    /* navegador → nginx */
+    links[0].classList.add('active');
+    nodes.web.classList.add('trip');
+    await sleep(420);
+
+    /* nginx → node */
+    links[1].classList.add('active');
+    nodes.app.classList.add('trip');
+    await sleep(420);
+
+    /* node → postgres */
+    nodes.db.classList.add('trip');
+
+    const { res, body: s, ms, error } = await pending;
+    if (error) throw error;
     if (!res.ok) throw new Error(s.error || 'error');
 
-    const rest = 450 - (performance.now() - start);
-    if (rest > 0) await new Promise((r) => setTimeout(r, rest));
+    const rest = MIN_TRIP - (performance.now() - start);
+    if (rest > 0) await sleep(rest);
 
     meta.textContent = `${s.count} registros · ${ms} ms`;
     out.innerHTML = rows(s.data);
   } catch (e) {
+    const rest = MIN_TRIP - (performance.now() - start);
+    if (rest > 0) await sleep(rest);
     meta.textContent = 'sin datos';
     out.innerHTML = `<div class="row"><span class="rmail">No se pudo consultar: ${esc(e.message)}</span></div>`;
+  } finally {
+    nodes.web.classList.remove('trip');
+    nodes.app.classList.remove('trip');
+    nodes.db.classList.remove('trip');
+    out.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Consultar';
+    traveling = false;
+    refresh();
   }
-  out.classList.add('show');
-  btn.disabled = false;
-  btn.textContent = 'Consultar';
-  refresh();
 }
 
 btn.addEventListener('click', consult);
