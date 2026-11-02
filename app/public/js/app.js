@@ -57,9 +57,9 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (c) => (
 const fecha = (d) => new Date(d).toLocaleDateString('es', { day: '2-digit', month: '2-digit' });
 
 function rows(data) {
-  return data.map((c) => `
+  return data.map((c, i) => `
     <div class="row">
-      <span class="rid">#${c.id}</span>
+      <span class="rid" title="id ${c.id}">#${i + 1}</span>
       <span class="rname">${esc(c.nombre)}</span>
       <span class="rmail">${esc(c.email)}</span>
       <span class="rdate">${fecha(c.creado_en)}</span>
