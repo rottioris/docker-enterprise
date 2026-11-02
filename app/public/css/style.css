@@ -48,7 +48,9 @@ body {
   transform:translateX(-50%);
   background:#7cc4ff; box-shadow:0 0 8px 2px rgba(124,196,255,.8); opacity:0;
 }
-.publish.hop .pkt { animation:vpacket .45s linear; }
+.publish.hop .pkt { animation:vpacket .38s linear; }
+.publish.back.hop .pkt { animation:vpacketrev .3s linear; }
+.publish.back .pline::before { animation-direction:reverse; }
 .plabel { position:relative; background:var(--card); padding:0 .4rem; font:.58rem ui-monospace, monospace; color:var(--accent); }
 
 /* red interna */
@@ -110,7 +112,9 @@ body {
   transform:translateY(-50%);
   background:#7cc4ff; box-shadow:0 0 8px 2px rgba(124,196,255,.75); opacity:0;
 }
-.link.hop .pkt { animation:hpacket .45s linear; }
+.link.hop .pkt { animation:hpacket .38s linear; }
+.link.back.hop .pkt { animation:hpacketrev .3s linear; }
+.link.back.active .wire::before { animation-direction:reverse; }
 .link small { position:absolute; top:calc(50% + .45rem); left:50%; transform:translateX(-50%); font:.53rem ui-monospace, monospace; color:var(--muted); white-space:nowrap; }
 
 /* panel de datos */
@@ -167,6 +171,19 @@ body {
   85% { opacity:1; }
   100% { top:calc(100% - 10px); opacity:0; }
 }
+/* vuelta: el paquete viaja en sentido contrario */
+@keyframes hpacketrev {
+  0% { left:calc(100% - 10px); opacity:0; }
+  15% { opacity:1; }
+  85% { opacity:1; }
+  100% { left:-10px; opacity:0; }
+}
+@keyframes vpacketrev {
+  0% { top:calc(100% - 10px); opacity:0; }
+  15% { opacity:1; }
+  85% { opacity:1; }
+  100% { top:-10px; opacity:0; }
+}
 
 @media (max-width:430px) {
   .diagram { flex-direction:column; align-items:stretch; }
@@ -176,7 +193,8 @@ body {
   .link.active .wire::before { animation:flowv 1.7s linear infinite; }
   .link.err .wire { background:repeating-linear-gradient(180deg, rgba(224,108,117,.55) 0 6px, transparent 6px 12px); }
   .wire .pkt { top:-10px; left:50%; width:3px; height:10px; transform:translateX(-50%); }
-  .link.hop .pkt { animation:vpacket .45s linear; }
+  .link.hop .pkt { animation:vpacket .38s linear; }
+  .link.back.hop .pkt { animation:vpacketrev .3s linear; }
   .link small { top:50%; left:calc(50% + .8rem); transform:translateY(-50%); }
   .add .btn { width:100%; }
   .rdate { display:none; }
