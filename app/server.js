@@ -17,6 +17,28 @@ const pool = new Pool({
   connectionTimeoutMillis: 5000,
 });
 
+/* crea las tablas y datos iniciales si no existen (idempotente) */
+async function initDb() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS clientes (
+      id        SERIAL PRIMARY KEY,
+      nombre    TEXT NOT NULL,
+      email     TEXT UNIQUE NOT NULL,
+      creado_en TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
+    INSERT INTO clientes (nombre, email) VALUES
+      ('Ana Torres',   'ana@example.com'),
+      ('Luis Ramírez', 'luis@example.com'),
+      ('Marta Díaz',   'marta@example.com')
+    ON CONFLICT (email) DO NOTHING
+  `);
+  console.log('Base de datos inicializada');
+}
+
+initDb().catch((err) => console.error('Error al inicializar la BD:', err.message));
+
 app.get('/api/status', async (req, res) => {
   const start = Date.now();
   try {
