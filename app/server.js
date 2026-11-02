@@ -5,6 +5,8 @@ const path = require('path');
 const app = express();
 const port = process.env.NODE_PORT || 3000;
 
+app.use(express.json());
+
 const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
@@ -42,6 +44,28 @@ app.get('/api/clientes', async (req, res) => {
     );
     res.json({ count: rows.length, data: rows });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/clientes', async (req, res) => {
+  const nombre = String((req.body && req.body.nombre) || '').trim();
+  const email = String((req.body && req.body.email) || '').trim();
+
+  if (!nombre || !email) {
+    return res.status(400).json({ error: 'nombre y email son obligatorios' });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      'INSERT INTO clientes (nombre, email) VALUES ($1, $2) RETURNING id, nombre, email, creado_en',
+      [nombre, email]
+    );
+    res.status(201).json({ data: rows[0] });
+  } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'ese email ya existe' });
+    }
     res.status(500).json({ error: err.message });
   }
 });
