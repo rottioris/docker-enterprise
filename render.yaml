@@ -1,0 +1,35 @@
+services:
+  - type: web
+    name: docker-enterprise
+    runtime: docker
+    plan: free
+    dockerfilePath: ./app/Dockerfile
+    dockerContext: ./app
+    healthCheckPath: /api/status
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: docker-enterprise-db
+          property: host
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_USER
+        fromDatabase:
+          name: docker-enterprise-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: docker-enterprise-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: docker-enterprise-db
+          property: database
+      - key: DB_SSL
+        value: "true"
+
+databases:
+  - name: docker-enterprise-db
+    databaseName: enterprise_db
+    user: enterprise
+    plan: free
